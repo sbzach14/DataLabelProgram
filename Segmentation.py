@@ -1,9 +1,6 @@
 import numpy as np
-import torch
 import matplotlib.pyplot as plt
-import cv2
-import sys
-from segment_anything import sam_model_registry, SamPredictor
+
 
 def show_mask(mask, ax, random_color=False):
     if random_color:
