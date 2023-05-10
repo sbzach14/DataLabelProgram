@@ -14,7 +14,7 @@ import json
 def mask_to_polygon(mask):
     mask = np.squeeze(mask)  # 删除多余的维度
     mask = mask.astype(np.uint8) * 255
-    print("mask shape: ", mask.shape, " mask: ", mask, "dataType:", mask.dtype)
+    # print("mask shape: ", mask.shape, " mask: ", mask, "dataType:", mask.dtype)
 
 
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -62,11 +62,11 @@ def imageLabeler(imagePath):
     predictor.set_image(img)
     input_point = np.array(points)
     input_label = np.array([1])
-    plt.figure(figsize=(10,10))
-    plt.imshow(img)
-    Segmentation.show_points(input_point, input_label, plt.gca())
-    plt.axis('on')
-    plt.show()
+    # plt.figure(figsize=(10,10))
+    # plt.imshow(img)
+    # Segmentation.show_points(input_point, input_label, plt.gca())
+    # plt.axis('on')
+    # plt.show()
     masks, scores, logits = predictor.predict(
         point_coords=input_point,
         point_labels=input_label,
@@ -91,13 +91,18 @@ if __name__ == "__main__":
     # polygon = imageLabeler("testSample.jpg") 
 
     # true code
-    folder_path = "Output/0022"
+    folder_path = "Output/0037"
+    shuffle_threshold = 98
     # data = {imageID: [polygonL, polygonR]}
     data = {}
     # Traverse
+    count = 0
     for filename in os.listdir(folder_path):
+        if count > shuffle_threshold:
+            break
         if filename.endswith(".jpg") or filename.endswith(".png"):
             # left and right
+            print("Picture Now ",filename)
             polygon_list = []
             for i in range(2):
                 # 构造图像文件的相对路径
@@ -107,6 +112,7 @@ if __name__ == "__main__":
                 polygon_list.append(polygon)
             data[filename] = polygon_list
             print(data[filename])
+            count = count + 1
     with open(folder_path[-4:] + ".json", "w") as out:
         json.dump(data, out)
         
