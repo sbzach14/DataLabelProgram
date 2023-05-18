@@ -54,9 +54,8 @@ def Data_Reform(excel_path, json_path):
             B[imagekey] = value
     return B
 
-
 if __name__ == "__main__":
-    NameList = ['0022','0024','0025','0027','0028','0030','0033','0034','0035','0037']
+    NameList = ['0041']
     for id in NameList:
         excel_path = "Label/OutputLabel/Label"+id+".xlsx"   
         json_path = "Label/"+id+".json"

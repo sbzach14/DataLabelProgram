@@ -8,6 +8,7 @@ from segment_anything import sam_model_registry, SamPredictor
 import Segmentation
 import os
 import json
+from DataReformer import CardToIndex
 # 定义回调函数
 
 
@@ -43,7 +44,8 @@ def imageLabeler(imagePath):
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     img = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
     # 调整图片大小
-    img = cv2.resize(img, (0, 0), fx=0.5, fy=0.5)
+    # img = cv2.resize(img, (0, 0), fx=0.5, fy=0.5)
+    print(img.shape)
     # 显示图片
     cv2.imshow('image', img)
     # 设置鼠标回调函数
@@ -72,6 +74,7 @@ def imageLabeler(imagePath):
         point_labels=input_label,
         multimask_output=False,
     )
+    print(masks.shape)
     # print("masks shape: ", masks.shape, " masks: ", masks, "dataType:", masks.dtype)
     for i, (mask, score) in enumerate(zip(masks, scores)):
         plt.figure(figsize=(10,10))
@@ -80,19 +83,30 @@ def imageLabeler(imagePath):
         Segmentation.show_points(input_point, input_label, plt.gca())
         plt.title(f"Mask {i+1}, Score: {score:.3f}", fontsize=18)
         plt.axis('off')
-        plt.show()
+        # plt.show()
+        # 等待用户按下任意键
+        plt.waitforbuttonpress()
+        # 关闭显示窗口
+        plt.close()
+    
+
     
     polygons =  mask_to_polygon(masks)
     return polygons
-      
+
+
+def EnterLabelAndDump():
+    card_name = input('Category:')
+    return CardToIndex(card_name)
+
 
 if __name__ == "__main__":   
     # test code
     # polygon = imageLabeler("testSample.jpg") 
 
     # true code
-    folder_path = "Output/0037"
-    shuffle_threshold = 98
+    folder_path = "Output/Cut_To_train_in_Video2"
+    shuffle_threshold = 10000
     # data = {imageID: [polygonL, polygonR]}
     data = {}
     # Traverse
@@ -102,19 +116,23 @@ if __name__ == "__main__":
             break
         if filename.endswith(".jpg") or filename.endswith(".png"):
             # left and right
-            print("Picture Now ",filename)
+            print("Picture Now ",filename, "   " + str(count))
             polygon_list = []
-            for i in range(2):
+            for i in range(1):
                 # 构造图像文件的相对路径
                 image_path = os.path.join(folder_path, filename)
                 # 调用函数B处理图像
                 polygon = imageLabeler(image_path)
                 polygon_list.append(polygon)
-            data[filename] = polygon_list
-            print(data[filename])
+            data[filename] = {}
+            data[filename]['segmentation'] = polygon_list
+            data[filename]['Categories'] = [EnterLabelAndDump()]
+            print(data[filename])   
             count = count + 1
-    with open(folder_path[-4:] + ".json", "w") as out:
+    with open("NewCutting2.json", "w") as out:
         json.dump(data, out)
+    
+
         
     
             
