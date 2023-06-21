@@ -6,6 +6,8 @@ import json
 import matplotlib.pyplot as plt
 import Segmentation
 from LabelProcess import mask_to_polygon
+import pycocotools.mask as mask_util
+import numpy as np
 
 
 def ResizeMask(mask, shape):
@@ -34,26 +36,38 @@ def polygon_to_mask(polygon, image_shape):
 
     return mask
 
+def RLE_to_mask(rle_encoded):
+    size = rle_encoded['size']
+    counts = rle_encoded['counts']
+    mask = mask_util.decode({'size': size, 'counts': counts})
+    return mask
+
+
+
 
 def ImageStandardizer(folder_path, output_folder):
     
     # os.makedirs(output_folder + '/' + 'Shuffle_'+folder_path[7:], exist_ok=True)
-    os.makedirs(output_folder + '/' + folder_path[7:], exist_ok=True)
+    os.makedirs(output_folder + '/' + folder_path[-4:], exist_ok=True)
 
     for filename in os.listdir(folder_path):
         image_path = os.path.join(folder_path, filename)
 
         img = cv2.imread(image_path)
-        if folder_path[-1] == '2':
+        if folder_path[-4:] == '0387':
+            img = cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
+        elif folder_path[-4:] == '0392':
+            img = cv2.rotate(img, cv2.ROTATE_180)
+        else:
             img = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
         # img = cv2.resize(img, (0, 0), fx=0.5, fy=0.5)
         img = cv2.resize(img, (960, 540))
-        output_path = os.path.join(output_folder, image_path[7:])
+        output_path = os.path.join(output_folder, folder_path[-4:] +"/"+ filename)
         print(output_path,"  " ,image_path)
         cv2.imwrite(output_path, img)
         
 
-def ImageMaskVerification(imageFolderPath, jsonPath):
+def ImageMaskVerification(imageFolderPath, jsonPath, encodeType):
 
     with open(jsonPath,'r') as jsonFile:
         data = json.load(jsonFile)
@@ -68,12 +82,16 @@ def ImageMaskVerification(imageFolderPath, jsonPath):
 
         for segmentPoly in segmentationList:
 
-            mask = polygon_to_mask(segmentPoly, img[:,:,0].shape)
-
+            if(encodeType == 'polygon'):
+                mask = polygon_to_mask(segmentPoly, img[:,:,0].shape)
+            elif(encodeType == 'RLE'):
+                mask  = RLE_to_mask(segmentPoly)
+            else:
+                print('wrong encoding type')
+                return
+            
             # data[imageName]['segmentation'].append(mask_to_polygon(mask))
-
             # Show mask
-
             plt.figure(figsize=(10,10))
             plt.imshow(img)
             Segmentation.show_mask(mask, plt.gca())
@@ -118,24 +136,45 @@ def RenameJson(jsonFolder):
 
 
 if __name__ == "__main__":
-    shuffle_folder_list = ['0022','0024','0025','0027','0028','0030','0033','0034','0035','0037','0041']
+    shuffle_folder_list = ['0387','0389','0391','0392','0393','0397']
     cut_folder_list = ['Modified_Cut_To_train_in_Video1']
+
+    for jsonId in shuffle_folder_list:
+        with open('Label/MergedLabel/Shuffle_Label_' + jsonId + '.json', 'r') as jsonfile:
+            labelData = json.load(jsonfile)
+
+        print(jsonId + "  " , len(labelData))
+
+        for imageID in labelData.keys():
+            labelData[imageID]['segmentation'] = labelData[imageID]['segmentation']['segmentation']
+            # print(len(labelData[imageID]['segmentation']))
+        newJson =  json.dumps(labelData)
+        with open('Label/MergedLabel/RLELabel/Shuffle_Label_' + jsonId + '.json', 'w') as f:
+            f.write(newJson)
+            
+
+                
+                
+
+
+
+
 
     # standardize the image to rotate 90 and resize to 1/2
 
-    # output_folder = "CutImageData"
-    # for folder_path in cut_folder_list:
-    #     ImageStandardizer('Output/' + folder_path, output_folder)
+    # output_folder = "ShuffleImageDataWithJoker/AfterStandardization"
+    # for folder_path in shuffle_folder_list:
+    #     ImageStandardizer('ShuffleImageDataWithJoker/' + folder_path, output_folder)
      
 
     # verify the image and mask position
 
-    for folderID in shuffle_folder_list:
-        if folderID == '0041':
-            print(folderID)
-            jsonPath = 'Label/MergedLabel/Shuffle_Label_'+ folderID+'.json'
-            imageFolderPath = 'ShuffleImageData/Shuffle_' + folderID
-            ImageMaskVerification(imageFolderPath, jsonPath)
+    # for folderID in shuffle_folder_list:
+    #     if folderID == '0041':
+    #         print(folderID)
+    #         jsonPath = 'Label/MergedLabel/RLELabel/Shuffle_Label_'+ folderID+'.json'
+    #         imageFolderPath = 'ShuffleImageData/Shuffle_' + folderID
+    #         ImageMaskVerification(imageFolderPath, jsonPath,'RLE')
 
     # for folderID in cut_folder_list:    
     #     print(folderID)

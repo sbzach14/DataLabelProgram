@@ -2,13 +2,13 @@ import os
 import cv2
 
 # 设置视频文件夹路径
-video_folder = "Video/"
+video_folder = "ShuffleVideoWithJoker/"
 
 # 获取所有视频文件的文件名
 video_files = [f for f in os.listdir(video_folder) if f.endswith('.mp4')]
 
 # 设置输出图片文件夹路径
-output_folder = "Output/"
+output_folder = "ShuffleImageDataWithJoker/"
 
 # 循环处理每个视频文件
 for video_file in video_files:

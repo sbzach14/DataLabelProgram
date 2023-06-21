@@ -8,7 +8,7 @@ from segment_anything import sam_model_registry, SamPredictor
 import Segmentation
 import os
 import json
-from DataReformer import CardToIndex
+from DataReformer import CardToIndex, encode_rle_for_binaryarray, encode_rle_for_nparray
 # 定义回调函数
 
 
@@ -42,9 +42,7 @@ def imageLabeler(imagePath):
     # 读取图片
     img = cv2.imread(imagePath)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    img = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
-    # 调整图片大小
-    # img = cv2.resize(img, (0, 0), fx=0.5, fy=0.5)
+
     print(img.shape)
     # 显示图片
     cv2.imshow('image', img)
@@ -90,9 +88,11 @@ def imageLabeler(imagePath):
         plt.close()
     
 
-    
-    polygons =  mask_to_polygon(masks)
-    return polygons
+    # return polygons
+    # polygons =  mask_to_polygon(masks)
+    masks = np.squeeze(masks)
+    rle_code = encode_rle_for_binaryarray(masks)
+    return rle_code
 
 
 def EnterLabelAndDump():
@@ -105,8 +105,9 @@ if __name__ == "__main__":
     # polygon = imageLabeler("testSample.jpg") 
 
     # true code
-    folder_path = "Output/Cut_To_train_in_Video2"
-    shuffle_threshold = 10000
+    folder_path = "ShuffleImageDataWithJoker/AfterStandardization/0397"
+    # Index of the last image
+    shuffle_threshold = 115
     # data = {imageID: [polygonL, polygonR]}
     data = {}
     # Traverse
@@ -117,19 +118,19 @@ if __name__ == "__main__":
         if filename.endswith(".jpg") or filename.endswith(".png"):
             # left and right
             print("Picture Now ",filename, "   " + str(count))
-            polygon_list = []
-            for i in range(1):
+            RLE_List = []
+            for i in range(2):
                 # 构造图像文件的相对路径
                 image_path = os.path.join(folder_path, filename)
                 # 调用函数B处理图像
-                polygon = imageLabeler(image_path)
-                polygon_list.append(polygon)
+                rle_code = imageLabeler(image_path)
+                rle_code['counts'] = rle_code["counts"].decode()
+                RLE_List.append(rle_code)
             data[filename] = {}
-            data[filename]['segmentation'] = polygon_list
-            data[filename]['Categories'] = [EnterLabelAndDump()]
+            data[filename]['segmentation'] = RLE_List
             print(data[filename])   
             count = count + 1
-    with open("NewCutting2.json", "w") as out:
+    with open("0397.json", "w") as out:
         json.dump(data, out)
     
 
