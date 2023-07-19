@@ -100,10 +100,69 @@ def EnterLabelAndDump():
     return CardToIndex(card_name)
 
 
-if __name__ == "__main__":   
-    # test code
-    # polygon = imageLabeler("testSample.jpg") 
+def display_images(folder_path):
+    image_files = [file for file in os.listdir(folder_path) if file.endswith(('.jpg', '.jpeg', '.png'))]
+    total_images = len(image_files)
+    current_image_index = 0
 
+    while current_image_index < total_images:
+        image_path = os.path.join(folder_path, image_files[current_image_index])
+        image = cv2.imread(image_path)
+        
+ 
+
+        cv2.imshow("Image Viewer", image)
+        cv2.setWindowTitle("Image Viewer", image_files[current_image_index])  # 设置窗口标题
+
+        key = cv2.waitKey(0)
+
+        if key == ord(' '):  # 按下空格键显示下一张图片
+            current_image_index += 1
+        elif key == 27:  # 按下ESC键退出循环
+            break
+
+    cv2.destroyAllWindows()
+
+
+def LabelCuttingCategory(folder_path):
+
+    image_files = [f for f in os.listdir(folder_path) if f.endswith(('.jpg', '.jpeg', '.png', '.gif'))]
+    class_value = ""
+    label_dic = {}
+     
+    for image_file in image_files:
+        # 显示当前图片
+        print("当前图片:", image_file, "当前classvalue", class_value)
+        image_path = os.path.join(folder_path, image_file)
+        image = cv2.imread(image_path)
+        cv2.imshow("Image", image)
+         # 输入种类
+        if class_value:
+            input_text = f"输入图片种类 (默认: {class_value}): "
+        else:
+            input_text = "输入图片种类: "
+
+        while True:
+            key = cv2.waitKey(0)
+            if key == ord('r') or key == ord('R'):
+                user_input = input(input_text)
+                if user_input.strip():
+                    class_value = user_input
+                break
+            elif key == 32:  # 空格键
+                break
+
+        label_dic[image_file] = {}
+        label_dic[image_file]["Categories"] = [CardToIndex(class_value)]
+        label_dic[image_file]["segmentation"] = []
+
+    return label_dic
+
+
+
+
+if __name__ == "__main__":   
+    #用SAM标注图片mask###########################################
     # true code
     folder_path = "ShuffleImageDataWithJoker/AfterStandardization/0397"
     # Index of the last image
@@ -111,30 +170,38 @@ if __name__ == "__main__":
     # data = {imageID: [polygonL, polygonR]}
     data = {}
     # Traverse
-    count = 0
-    for filename in os.listdir(folder_path):
-        if count > shuffle_threshold:
-            break
-        if filename.endswith(".jpg") or filename.endswith(".png"):
-            # left and right
-            print("Picture Now ",filename, "   " + str(count))
-            RLE_List = []
-            for i in range(2):
-                # 构造图像文件的相对路径
-                image_path = os.path.join(folder_path, filename)
-                # 调用函数B处理图像
-                rle_code = imageLabeler(image_path)
-                rle_code['counts'] = rle_code["counts"].decode()
-                RLE_List.append(rle_code)
-            data[filename] = {}
-            data[filename]['segmentation'] = RLE_List
-            print(data[filename])   
-            count = count + 1
-    with open("0397.json", "w") as out:
-        json.dump(data, out)
+    # count = 0
+    # for filename in os.listdir(folder_path):
+    #     if count > shuffle_threshold:
+    #         break
+    #     if filename.endswith(".jpg") or filename.endswith(".png"):
+    #         # left and right
+    #         print("Picture Now ",filename, "   " + str(count))
+    #         RLE_List = []
+    #         for i in range(2):
+    #             # 构造图像文件的相对路径
+    #             image_path = os.path.join(folder_path, filename)
+    #             # 调用函数B处理图像
+    #             rle_code = imageLabeler(image_path)
+    #             rle_code['counts'] = rle_code["counts"].decode()
+    #             RLE_List.append(rle_code)
+    #         data[filename] = {}
+    #         data[filename]['segmentation'] = RLE_List
+    #         print(data[filename])   
+    #         count = count + 1
+    # with open("0397.json", "w") as out:
+    #     json.dump(data, out)
+
+    # 显示图片############################################
     
 
-        
+    display_images("Image\Shuffle_0755")
+    # LABELED_FOLDER = ["Cutting_1361", "Cutting_1362"]
+    # with open("CutVIdeo\Cutting_Label_1363.json", "w") as l:
+    #     label_dic = LabelCuttingCategory("CutVIdeo\Cutting_1363")
+    #     json.dump(label_dic, l)
+    
+
     
             
 

@@ -16,12 +16,9 @@ def ResizeMask(mask, shape):
     return resized_mask
 
 
-
 def polygon_to_mask(polygon, image_shape):
     # 创建空白掩码图像
     mask = np.zeros(image_shape, dtype=np.uint8)
-
-
     for points in polygon:
         # 多边形顶点坐标列表
         points = np.array(points, dtype=np.int32)
@@ -33,7 +30,6 @@ def polygon_to_mask(polygon, image_shape):
 
     if mask.shape != image_shape:
         mask = ResizeMask(mask, image_shape)
-
     return mask
 
 def RLE_to_mask(rle_encoded):
@@ -45,24 +41,16 @@ def RLE_to_mask(rle_encoded):
 
 
 
-def ImageStandardizer(folder_path, output_folder):
-    
+def ImageStandardizer(data_folder_path, output_folder, image_folder_path):
     # os.makedirs(output_folder + '/' + 'Shuffle_'+folder_path[7:], exist_ok=True)
-    os.makedirs(output_folder + '/' + folder_path[-4:], exist_ok=True)
+    os.makedirs(output_folder + '/resized' + image_folder_path, exist_ok=True)
 
-    for filename in os.listdir(folder_path):
-        image_path = os.path.join(folder_path, filename)
-
-        img = cv2.imread(image_path)
-        if folder_path[-4:] == '0387':
-            img = cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
-        elif folder_path[-4:] == '0392':
-            img = cv2.rotate(img, cv2.ROTATE_180)
-        else:
-            img = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
+    for filename in os.listdir(data_folder_path):
+        image_path = os.path.join(data_folder_path, filename)
         # img = cv2.resize(img, (0, 0), fx=0.5, fy=0.5)
+        img = cv2.imread(image_path)
         img = cv2.resize(img, (960, 540))
-        output_path = os.path.join(output_folder, folder_path[-4:] +"/"+ filename)
+        output_path = output_folder + '/resized' + image_folder_path +"/"+ filename
         print(output_path,"  " ,image_path)
         cv2.imwrite(output_path, img)
         
@@ -130,41 +118,15 @@ def RenameJson(jsonFolder):
 
 
 
-  
-
- 
-
-
 if __name__ == "__main__":
-    shuffle_folder_list = ['0387','0389','0391','0392','0393','0397']
+    shuffle_folder_list = ['0750','0752','0753','0754','0755','0756','0757','0759']
     cut_folder_list = ['Modified_Cut_To_train_in_Video1']
-
-    for jsonId in shuffle_folder_list:
-        with open('Label/MergedLabel/Shuffle_Label_' + jsonId + '.json', 'r') as jsonfile:
-            labelData = json.load(jsonfile)
-
-        print(jsonId + "  " , len(labelData))
-
-        for imageID in labelData.keys():
-            labelData[imageID]['segmentation'] = labelData[imageID]['segmentation']['segmentation']
-            # print(len(labelData[imageID]['segmentation']))
-        newJson =  json.dumps(labelData)
-        with open('Label/MergedLabel/RLELabel/Shuffle_Label_' + jsonId + '.json', 'w') as f:
-            f.write(newJson)
-            
-
-                
-                
-
-
-
-
 
     # standardize the image to rotate 90 and resize to 1/2
 
-    # output_folder = "ShuffleImageDataWithJoker/AfterStandardization"
-    # for folder_path in shuffle_folder_list:
-    #     ImageStandardizer('ShuffleImageDataWithJoker/' + folder_path, output_folder)
+    output_folder = "SupplementaryVideo/"
+    for folder_path in shuffle_folder_list:
+        ImageStandardizer('SupplementaryVideo/' + folder_path, output_folder, folder_path)
      
 
     # verify the image and mask position

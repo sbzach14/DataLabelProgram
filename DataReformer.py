@@ -63,27 +63,23 @@ def CardToIndex(card_name):
     else:
         return (CardDic[card_name[0]] * 13 +CardDic[card_name[1]] - 1) 
 
-def Data_Reform(excel_path, json_path):
-    with open(json_path, 'r') as jsonfile:
-        mask_data = json.load(jsonfile)
-        # 打开Excel文件
-        workbook = openpyxl.load_workbook(excel_path)
+def Data_Reform(excel_path):
+    # 打开Excel文件
+    workbook = openpyxl.load_workbook(excel_path)
 
-        # 选择要读取的工作表
-        sheet = workbook['工作表1']
+    # 选择要读取的工作表
+    sheet = workbook['工作表1']
 
-        # 创建一个空字典
-        B = {}
-        # 从第二行开始遍历工作表
-        for row in sheet.iter_rows(min_row=2, values_only=True):
-            # 取出图片序号作为键
-            imagekey = str(int(row[0])).zfill(6) + '.jpg'
-            # 取出mask
-            mask = mask_data[imagekey]
-            # 创建一个新的字典作为值
-            value = {"Categories": [CardToIndex(row[1]),CardToIndex(row[2])], "segmentation" :mask,"isBlur": [int(row[3]),int(row[4])], "RelativePos": [int(row[5]),int(row[6])]}
-            # 将键值对添加到B字典中
-            B[imagekey] = value
+    # 创建一个空字典
+    B = {}
+    # 从第二行开始遍历工作表
+    for row in sheet.iter_rows(min_row=2, values_only=True):
+        # 取出图片序号作为键
+        imagekey = str(int(row[0])).zfill(6) + '.jpg'
+        # 创建一个新的字典作为值
+        value = {"Categories": [CardToIndex(row[1]),CardToIndex(row[2])],"isBlur": [int(row[3]),int(row[4])], "RelativePos": [int(row[5]),int(row[6])]}
+        # 将键值对添加到B字典中
+        B[imagekey] = value
     return B
 
 
@@ -103,17 +99,17 @@ def encode_rle_for_binaryarray(mask):
     return rle_encode
 
 if __name__ == "__main__":
-    NameList = ['0387','0389','0391','0392','0393','0397']
-    for id in NameList:
-        print(id)
-        excel_path = "Label/OutputLabel/Label"+id+".xlsx"   
-        json_path = id+".json"
-        merged_dic = Data_Reform(excel_path, json_path)
+    excel_folder = "Excel"
+    excel_path_list = os.listdir(excel_folder)
+    for excel in excel_path_list:
+        excel_path = os.path.join(excel_folder, excel)
+        json_path = os.path.join("Label","Shuffle_Label_"+excel[5:-5]+".json")
+        merged_dic = Data_Reform(excel_path)
         # 将字典转换为 JSON 格式的字符串
         json_str = json.dumps(merged_dic)
 
         # 将 JSON 格式的字符串写入到文件中
-        with open("Label/MergedLabel/" + "Shuffle_Label_" + id + ".json", 'w') as f:
+        with open(json_path, 'w') as f:
             f.write(json_str)
 
     output_path = "Label/MergedLabel/RLELabel/"

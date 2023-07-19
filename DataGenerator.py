@@ -2,13 +2,13 @@ import os
 import cv2
 
 # 设置视频文件夹路径
-video_folder = "ShuffleVideoWithJoker/"
+video_folder = "ActionVideo/"
 
 # 获取所有视频文件的文件名
-video_files = [f for f in os.listdir(video_folder) if f.endswith('.mp4')]
+video_files = [f for f in os.listdir(video_folder) if f.endswith('.MOV')]
 
 # 设置输出图片文件夹路径
-output_folder = "ShuffleImageDataWithJoker/"
+output_folder = "ActionVideo/"
 
 # 循环处理每个视频文件
 for video_file in video_files:
@@ -31,6 +31,8 @@ for video_file in video_files:
         
         # 保存当前帧为图片文件
         frame_path = os.path.join(output_path, f"{frame_count:06d}.jpg")
+        frame = cv2.resize(frame, (960, 540))
+
         cv2.imwrite(frame_path, frame)
         
         frame_count += 1
